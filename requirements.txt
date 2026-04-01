@@ -1,7 +1,7 @@
 streamlit
-torch
-opencv-python-headless
+torch==2.0.1
+opencv-python-headless==4.8.1.78
 numpy
 Pillow
 ultralytics
-mediapipe
+mediapipe==0.10.9
