@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.cache/
+.kaggle/
+data/
+*.zip
+drowsy_screenshots/
+venv/
