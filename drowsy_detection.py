@@ -245,7 +245,7 @@ class DrowsinessDetector:
         # THRESHOLDS
         # ============================================================
         self.DROWSY_CNN_THRESH    = 0.78   # CNN prob to start CNN drowsy timer
-        self.DROWSY_CNN_INSTANT   = 0.92   # CNN instant alert (no timer needed)
+        self.DROWSY_CNN_INSTANT   = 0.97   # CNN instant alert (no timer needed)
         self.DROWSY_TIME_SEC      = 4.5    # Sustained closed-eye duration → DROWSY
 
         self.EAR_CLOSED_FLOOR     = 0.15   # Lower floor — glasses reduce EAR naturally
@@ -304,7 +304,9 @@ class DrowsinessDetector:
 
     def _eyes_closed(self, face_id, ear_val):
         threshold = self._ear_thresholds.get(face_id, self.EAR_CLOSED_FLOOR)
-        return ear_val < threshold
+
+        # extra safety margin
+        return ear_val < (threshold - 0.015)
 
     def _forced_close(self, face_id, ear_val):
         state = self.face_states.get(face_id)
@@ -323,6 +325,16 @@ class DrowsinessDetector:
 
         # --- Low-light enhancement before MediaPipe ---
         enhanced = enhance_low_light(frame)
+
+        # HARD BOOST (extreme darkness)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        brightness = gray.mean()
+
+        if brightness < 80:
+            enhanced = enhance_low_light(frame)
+            enhanced = cv2.convertScaleAbs(enhanced, alpha=1.5, beta=25)
+        else:
+            enhanced = frame.copy()
 
         rgb    = cv2.cvtColor(enhanced, cv2.COLOR_BGR2RGB)
         mp_img = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
@@ -358,6 +370,12 @@ class DrowsinessDetector:
 
             # ---- CNN-LSTM inference ----
             crop, bbox = crop_face(enhanced, face_lms, w, h, pad=0.20)
+            if crop is not None:
+                if brightness < 80:
+                    crop = cv2.convertScaleAbs(crop, alpha=1.2, beta=10)
+                gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+                gray = cv2.equalizeHist(gray)
+                crop = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
             x1, y1, x2, y2 = bbox
             cnn_prob = 0.0
 
@@ -398,9 +416,9 @@ class DrowsinessDetector:
 
             # --- PATH B: CNN + EAR drowsy ---
             drowsy_cnn_signal = (
-                (cnn_prob >= self.DROWSY_CNN_THRESH and closed and ear_avg < 0.20) or
-                (cnn_prob >= self.DROWSY_CNN_INSTANT and ear_avg < 0.20)
-            ) and not forced
+                (cnn_prob >= self.DROWSY_CNN_THRESH and closed) or
+                (cnn_prob >= self.DROWSY_CNN_INSTANT and closed)
+            )
 
             if drowsy_cnn_signal:
                 if state.drowsy_start is None:
@@ -411,10 +429,10 @@ class DrowsinessDetector:
                 state.reset_drowsy()
 
             # Combined drowsy = either path fires
-            is_drowsy_final = state.ear_drowsy or (
-                state.is_drowsy and state.ear_closed_start is not None
+            is_drowsy_final = (
+                state.ear_drowsy or
+                (state.is_drowsy and state.ear_closed_start is not None and (now - state.ear_closed_start) > 1.5)
             )
-
             # --- NOT ATTENTIVE ---
             # Head turned OR gaze away, eyes can be open OR closed
             looking_away = (
