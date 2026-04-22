@@ -617,8 +617,8 @@ Camera Frame (BGR)
 Low-Light Enhancement  ←  CLAHE + brightness boost + IR simulation
        │
        ▼
-MediaPipe FaceLandmarker  ──────────────────────────┐
-  478 landmarks, up to 3 faces                      │
+MediaPipe FaceLandmarker  ───────────────────────────┐
+  478 landmarks, up to 3 faces                       │
        │                                             │
        ├─── Face Crop (pad=20%) ───► CNN-LSTM        │
        │         Enhanced crop → histogram eq        │
@@ -628,11 +628,11 @@ MediaPipe FaceLandmarker  ──────────────────
        │         → P(Drowsy)                         │
        │                                             │
        ├─── EAR (Eye Aspect Ratio) ◄─────────────────┤
-       │         Per-face calibrated threshold        │
+       │         Per-face calibrated threshold       │
        │         Path A: EAR timer (independent)     │
        │                                             │
        ├─── Head Pose (Yaw / Pitch) ◄────────────────┤
-       │         Normalized face-width units          │
+       │         Normalized face-width units         │
        │                                             │
        └─── Gaze Offset (Iris vs Eye center) ◄───────┘
                  Average pixel offset both eyes
@@ -761,19 +761,19 @@ elif page == "📁 Dataset Info":
   ┌───────────────────────────────────────────────────────────────────────────────────┐
   │                     CNN-LSTM Training  (step2_retrain.py)                         │
   │                                                                                   │
-  │  MobileNetV2 (ImageNet) → Last 4 blocks trainable → LSTM(128) → FC(2)            │
-  │  Optimizer: Adam  |  LR: 1e-5/1e-4  |  Loss: CrossEntropy  |  Epochs: 12         │
+  │  MobileNetV2 (ImageNet) → Last 4 blocks trainable → LSTM(128) → FC(2)             │
+  │  Optimizer: Adam  |  LR: 1e-5/1e-4  |  Loss: CrossEntropy  |  Epochs: 12          │
   └──────────────────────────────────────┬────────────────────────────────────────────┘
                                          │
                                          ▼
-                          ┌──────────────────────────────┐
+                          ┌───────────────────────────────┐
                           │      best_model_v2.pth        │
                           │  Accuracy      : 95%          │
                           │  Drowsy F1     : 0.95         │
                           │  Drowsy Recall : 96%          │
                           │  Works in      : Normal ☀️    │
                           │  Fails in      : Low light ❌ │
-                          └──────────────────────────────┘
+                          └───────────────────────────────┘
                                          │
                                          ▼
              Problem: Dark frames → MediaPipe fails → no crop → no CNN → no alert
@@ -798,21 +798,21 @@ elif page == "📁 Dataset Info":
   ┌───────────────────────────────────────────────────────────────────────────────────┐
   │                     Fine-Tune  (step2_finetune_ll.py)                             │
   │                                                                                   │
-  │  Start from : best_model_v2.pth weights  (NOT from scratch)                      │
-  │  Dataset    : data/cropped_mp_ll/  (low-light enhanced crops)                    │
-  │  LR         : 5e-6 (CNN) / 5e-5 (LSTM+FC) — conservative                        │
-  │  Augment    : GaussianBlur(3) + ColorJitter(0.3,0.3) → IR noise simulation       │
+  │  Start from : best_model_v2.pth weights  (NOT from scratch)                       │
+  │  Dataset    : data/cropped_mp_ll/  (low-light enhanced crops)                     │
+  │  LR         : 5e-6 (CNN) / 5e-5 (LSTM+FC) — conservative                          │
+  │  Augment    : GaussianBlur(3) + ColorJitter(0.3,0.3) → IR noise simulation        │
   │  Epochs     : 10  |  Best val acc saved automatically                             │
   └──────────────────────────────────────┬────────────────────────────────────────────┘
                                          │
                                          ▼
-                          ┌──────────────────────────────┐
+                          ┌───────────────────────────────┐
                           │      best_model_ll.pth        │
                           │  Accuracy      : 92%          │
                           │  AUC           : 0.9746       │
                           │  Drowsy Recall : 95%          │
                           │  Works in      : Low light 🌙 │
-                          └──────────────────────────────┘
+                          └───────────────────────────────┘
 """, language="text")
 
     st.markdown("#### 🚀 Phase 4 — Real-Time Adaptive Detection System")
@@ -857,9 +857,9 @@ elif page == "📁 Dataset Info":
   ┌──────────────────────────────────────────────────┐
   │               Decision Engine                    │
   │                                                  │
-  │  Path A (EAR-only): eyes closed ≥ 4s → DROWSY   │
-  │  Path B (CNN+EAR) : CNN ≥ 0.55 + closed → timer │
-  │  Path B instant   : CNN ≥ 0.82 → DROWSY         │
+  │  Path A (EAR-only): eyes closed ≥ 4s → DROWSY    │
+  │  Path B (CNN+EAR) : CNN ≥ 0.55 + closed → timer  │
+  │  Path B instant   : CNN ≥ 0.82 → DROWSY          │
   │  Forced shut      : sudden EAR drop < 0.07       │
   │  Inattentive      : yaw/pitch/gaze for 12s       │
   └────────────────────┬─────────────────────────────┘
