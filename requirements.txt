@@ -1,8 +1,11 @@
-streamlit
+fastapi
+uvicorn[standard]
+
 torch==2.0.1
 opencv-python-headless==4.5.5.64
 numpy
 Pillow
 ultralytics
 mediapipe==0.10.9
-uvicorn
+
+streamlit
