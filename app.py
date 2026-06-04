@@ -371,19 +371,19 @@ elif page == "📊 Model Details":
     st.code("""
 Input Shape : (Batch, 3 frames, 3 channels, 160px, 160px)
         ↓
-Flatten time into batch dimension  →  (B×3, 3, 160, 160)
+Flatten time into batch dimension  -->  (B×3, 3, 160, 160)
         ↓
-MobileNetV2 feature extraction     →  (B×3, 1280)
+MobileNetV2 feature extraction     -->  (B×3, 1280)
         ↓
-Reshape back to sequence           →  (B, 3, 1280)
+Reshape back to sequence           -->  (B, 3, 1280)
         ↓
-LSTM (hidden=128, layers=1)        →  (B, 3, 128)
+LSTM (hidden=128, layers=1)        -->  (B, 3, 128)
         ↓
-Take last timestep output          →  (B, 128)
+Take last timestep output          -->  (B, 128)
         ↓
-Fully connected classifier         →  (B, 2)
+Fully connected classifier         -->  (B, 2)
         ↓
-Softmax                            →  P(Not Drowsy), P(Drowsy)
+Softmax                            -->  P(Not Drowsy), P(Drowsy)
     """, language="text")
 
     st.markdown("---")
@@ -413,7 +413,7 @@ Softmax                            →  P(Not Drowsy), P(Drowsy)
 
     with tab2:
         st.success(
-            "**Fine-tuning strategy:** Loaded `best_model_v2.pth` weights → adapted to "
+            "**Fine-tuning strategy:** Loaded `best_model_v2.pth` weights --> adapted to "
             "low-light enhanced dataset (`data/cropped_mp_ll/`) with lower learning rates "
             "to preserve learned features while adapting to IR-like visual patterns."
         )
@@ -475,8 +475,8 @@ Grayscale Fix   : cv2.COLOR_GRAY2RGB    (handles single-channel IR frames)
         st.markdown("**Confusion Matrix — best_model_v2**")
         st.table({
             "Actual \\ Predicted"  : ["Not Drowsy (Actual)", "Drowsy (Actual)"],
-            "→ Not Drowsy"         : ["2794 ✅ (True Not Drowsy)", "144 ❌ (Missed Drowsy)"],
-            "→ Drowsy"             : ["179 ⚠️ (False Alarm)",    "3456 ✅ (True Drowsy)"]
+            "--> Not Drowsy"         : ["2794 ✅ (True Not Drowsy)", "144 ❌ (Missed Drowsy)"],
+            "--> Drowsy"             : ["179 ⚠️ (False Alarm)",    "3456 ✅ (True Drowsy)"]
         })
 
         st.markdown("**Confusion Matrix Interpretation — best_model_v2**")
@@ -523,8 +523,8 @@ Grayscale Fix   : cv2.COLOR_GRAY2RGB    (handles single-channel IR frames)
         st.markdown("**Confusion Matrix — best_model_ll**")
         st.table({
             "Actual \\ Predicted"  : ["Not Drowsy (Actual)", "Drowsy (Actual)"],
-            "→ Not Drowsy"         : ["2650 ✅ (True Not Drowsy)", "188 ❌ (Missed Drowsy)"],
-            "→ Drowsy"             : ["323 ⚠️ (False Alarm)",    "3412 ✅ (True Drowsy)"]
+            "--> Not Drowsy"         : ["2650 ✅ (True Not Drowsy)", "188 ❌ (Missed Drowsy)"],
+            "--> Drowsy"             : ["323 ⚠️ (False Alarm)",    "3412 ✅ (True Drowsy)"]
         })
 
         st.markdown("**Confusion Matrix Interpretation — best_model_ll**")
@@ -567,9 +567,9 @@ Grayscale Fix   : cv2.COLOR_GRAY2RGB    (handles single-channel IR frames)
     st.success(
         "**Dynamic Model Switching Enabled**  \n"
         "The system automatically selects the optimal model based on ambient brightness:  \n\n"
-        "- ☀️ Bright scenes (brightness > 90) → `best_model_v2.pth` (RGB trained)  \n"
-        "- 🌙 Low-light scenes (brightness < 75) → `best_model_ll.pth` (fine-tuned)  \n"
-        "- 🔄 Hysteresis zone (75–90) → stays on current model to prevent flickering  \n"
+        "- ☀️ Bright scenes (brightness > 90) --> `best_model_v2.pth` (RGB trained)  \n"
+        "- 🌙 Low-light scenes (brightness < 75) --> `best_model_ll.pth` (fine-tuned)  \n"
+        "- 🔄 Hysteresis zone (75–90) --> stays on current model to prevent flickering  \n"
         "- ⏱️ 2-second cooldown between switches prevents rapid toggling  \n\n"
         "This approach ensures maximum accuracy in both daytime and nighttime/cockpit conditions."
     )
@@ -621,11 +621,11 @@ MediaPipe FaceLandmarker  ──────────────────
   478 landmarks, up to 3 faces                       │
        │                                             │
        ├─── Face Crop (pad=20%) ───► CNN-LSTM        │
-       │         Enhanced crop → histogram eq        │
+       │         Enhanced crop --> histogram eq        │
        │         Sequence of 3 frames                │
-       │         → MobileNetV2 features              │
-       │         → LSTM temporal model               │
-       │         → P(Drowsy)                         │
+       │         --> MobileNetV2 features              │
+       │         --> LSTM temporal model               │
+       │         --> P(Drowsy)                         │
        │                                             │
        ├─── EAR (Eye Aspect Ratio) ◄─────────────────┤
        │         Per-face calibrated threshold       │
@@ -708,7 +708,7 @@ elif page == "📁 Dataset Info":
 
     st.title("📁 Dataset Information & Project Pipeline")
     st.markdown(
-        "Complete journey from raw NTHU dataset → RGB model → Low-Light fine-tuning → "
+        "Complete journey from raw NTHU dataset --> RGB model --> Low-Light fine-tuning --> "
         "Adaptive real-time detection system. Scroll down for detailed dataset stats, "
         "pipeline stages, known issues and fixes."
     )
@@ -739,7 +739,7 @@ elif page == "📁 Dataset Info":
   │  cut off eyes ❌    │       │ NOT eye closure ❌     │       │  detected ❌    │
   └──────────────────────┘       └────────────────────────┘       └──────────────────┘
 
-  Problem: Fixed crop cut off eye region → model learned face texture not eye state
+  Problem: Fixed crop cut off eye region --> model learned face texture not eye state
   Fix    : Scrapped. Restarted with MediaPipe landmark-based crop
                                           │
                                           ▼
@@ -761,7 +761,7 @@ elif page == "📁 Dataset Info":
   ┌───────────────────────────────────────────────────────────────────────────────────┐
   │                     CNN-LSTM Training  (step2_retrain.py)                         │
   │                                                                                   │
-  │  MobileNetV2 (ImageNet) → Last 4 blocks trainable → LSTM(128) → FC(2)             │
+  │  MobileNetV2 (ImageNet) --> Last 4 blocks trainable --> LSTM(128) --> FC(2)             │
   │  Optimizer: Adam  |  LR: 1e-5/1e-4  |  Loss: CrossEntropy  |  Epochs: 12          │
   └──────────────────────────────────────┬────────────────────────────────────────────┘
                                          │
@@ -776,7 +776,7 @@ elif page == "📁 Dataset Info":
                           └───────────────────────────────┘
                                          │
                                          ▼
-             Problem: Dark frames → MediaPipe fails → no crop → no CNN → no alert
+             Problem: Dark frames --> MediaPipe fails --> no crop --> no CNN --> no alert
 """, language="text")
 
     st.markdown("#### 🌙 Phase 3 — Low-Light / IR Pipeline (Fine-Tune)")
@@ -784,7 +784,7 @@ elif page == "📁 Dataset Info":
   Same Raw NTHU        CLAHE Enhancement      IR Simulation         Face Crop
   Frames (reused)      clipLimit=4.0          Fallback              pad=20%
   66,521 images        alpha=1.4, beta=20     equalizeHist          100% saved ✅
-       │               step1_recrop_lowlight  gray → BGR
+       │               step1_recrop_lowlight  gray --> BGR
        ▼                    │                      │                      │
   ┌─────────┐        ┌──────────────┐       ┌─────────────┐       ┌──────────────┐
   │  data/  │ ──────►│  Enhance     │──────►│  MediaPipe  │──────►│  data/       │
@@ -801,7 +801,7 @@ elif page == "📁 Dataset Info":
   │  Start from : best_model_v2.pth weights  (NOT from scratch)                       │
   │  Dataset    : data/cropped_mp_ll/  (low-light enhanced crops)                     │
   │  LR         : 5e-6 (CNN) / 5e-5 (LSTM+FC) — conservative                          │
-  │  Augment    : GaussianBlur(3) + ColorJitter(0.3,0.3) → IR noise simulation        │
+  │  Augment    : GaussianBlur(3) + ColorJitter(0.3,0.3) --> IR noise simulation        │
   │  Epochs     : 10  |  Best val acc saved automatically                             │
   └──────────────────────────────────────┬────────────────────────────────────────────┘
                                          │
@@ -821,14 +821,14 @@ elif page == "📁 Dataset Info":
           │
           ▼
   ┌─────────────────────┐
-  │   Brightness Check  │    gray.mean() < 75  →  LOW LIGHT  →  best_model_ll
-  │     every frame     │    gray.mean() > 90  →  NORMAL     →  best_model_v2
-  └──────────┬──────────┘    75–90             →  stay on current (hysteresis)
+  │   Brightness Check  │    gray.mean() < 75  -->  LOW LIGHT  -->  best_model_ll
+  │     every frame     │    gray.mean() > 90  -->  NORMAL     -->  best_model_v2
+  └──────────┬──────────┘    75–90             -->  stay on current (hysteresis)
              │                                    2 sec cooldown between switches
              ▼
   ┌──────────────────────────────────────────────────┐
   │        Low-Light Enhancement (always on)         │
-  │   CLAHE (LAB L-channel) → brightness boost       │
+  │   CLAHE (LAB L-channel) --> brightness boost       │
   │   convertScaleAbs(alpha=2.0, beta=40)            │
   └──────────────────────┬───────────────────────────┘
                          │
@@ -857,9 +857,9 @@ elif page == "📁 Dataset Info":
   ┌──────────────────────────────────────────────────┐
   │               Decision Engine                    │
   │                                                  │
-  │  Path A (EAR-only): eyes closed ≥ 4s → DROWSY    │
-  │  Path B (CNN+EAR) : CNN ≥ 0.55 + closed → timer  │
-  │  Path B instant   : CNN ≥ 0.82 → DROWSY          │
+  │  Path A (EAR-only): eyes closed ≥ 4s --> DROWSY    │
+  │  Path B (CNN+EAR) : CNN ≥ 0.55 + closed --> timer  │
+  │  Path B instant   : CNN ≥ 0.82 --> DROWSY          │
   │  Forced shut      : sudden EAR drop < 0.07       │
   │  Inattentive      : yaw/pitch/gaze for 12s       │
   └────────────────────┬─────────────────────────────┘
@@ -890,10 +890,10 @@ elif page == "📁 Dataset Info":
             "app.py"
         ],
         "Purpose"   : [
-            "MediaPipe face crop on raw NTHU dataset → data/cropped_mp/",
-            "CLAHE + IR-fallback crop → data/cropped_mp_ll/ (Phase 3)",
-            "Full CNN-LSTM training on cropped_mp → best_model_v2.pth",
-            "Fine-tune best_model_v2 on cropped_mp_ll → best_model_ll.pth",
+            "MediaPipe face crop on raw NTHU dataset --> data/cropped_mp/",
+            "CLAHE + IR-fallback crop --> data/cropped_mp_ll/ (Phase 3)",
+            "Full CNN-LSTM training on cropped_mp --> best_model_v2.pth",
+            "Fine-tune best_model_v2 on cropped_mp_ll --> best_model_ll.pth",
             "Generate confusion matrix + ROC curve for any saved model",
             "Core detection engine: MediaPipe + CNN-LSTM + EAR + alerts",
             "Streamlit UI: Live detection + Model Details + Dataset Info"
@@ -1019,9 +1019,9 @@ Output: data/cropped_mp_ll/
     st.markdown("**Stage 5 — Train / Val / Test Split**")
     st.code("""
 Strategy   : Stratified split (class balance preserved in every subset)
-Train      : 80%  →  ~53,216 sequences
-Validation : 10%  →   ~6,652 sequences
-Test       : 10%  →   ~6,573 sequences
+Train      : 80%  -->  ~53,216 sequences
+Validation : 10%  -->   ~6,652 sequences
+Test       : 10%  -->   ~6,573 sequences
 
 Sequence length : 3 consecutive frames per sample
 Sorted by filename to maintain temporal ordering within clips
@@ -1052,16 +1052,16 @@ Sorted by filename to maintain temporal ordering within clips
 Low-Light Enhancement Flow (runtime):
 
 frame
-  → check brightness (gray.mean())
-  → if dark: CLAHE (clipLimit=3.0–5.0 adaptive)
-  → hard boost: convertScaleAbs(alpha=2.0, beta=40)
-  → MediaPipe detection
-  → if fail: IR simulation (equalizeHist → gray → BGR)
-  → MediaPipe detection (fallback)
-  → crop face
-  → crop enhance: convertScaleAbs(alpha=1.3, beta=15)
-  → histogram equalize crop
-  → CNN-LSTM inference
+  --> check brightness (gray.mean())
+  --> if dark: CLAHE (clipLimit=3.0–5.0 adaptive)
+  --> hard boost: convertScaleAbs(alpha=2.0, beta=40)
+  --> MediaPipe detection
+  --> if fail: IR simulation (equalizeHist --> gray --> BGR)
+  --> MediaPipe detection (fallback)
+  --> crop face
+  --> crop enhance: convertScaleAbs(alpha=1.3, beta=15)
+  --> histogram equalize crop
+  --> CNN-LSTM inference
     """, language="text")
 
     st.markdown("---")
@@ -1111,7 +1111,7 @@ frame
     st.markdown("**5. Low-Light Domain Gap (Resolved)**")
     st.warning(
         "**Original problem:** Model trained on well-lit RGB data failed in dark/cockpit conditions.  \n"
-        "- MediaPipe could not detect faces in dark frames → no crop → no CNN input  \n"
+        "- MediaPipe could not detect faces in dark frames --> no crop --> no CNN input  \n"
         "- Even when detected, dark crops caused CNN to output low-confidence scores  \n\n"
         "**Resolution (multi-step):**  \n"
         "1. Created `cropped_mp_ll` dataset with CLAHE + IR fallback preprocessing  \n"
@@ -1129,10 +1129,10 @@ frame
 
     st.warning(
         "Performance depends significantly on lighting conditions.  \n\n"
-        "- **Extreme darkness** (no visible face outline) → detection fails for any model  \n"
-        "- **Low light** (face silhouette visible) → low-light model handles well ✅  \n"
-        "- **Balanced lighting** → optimal performance for both models ✅  \n"
-        "- **Overexposure** → feature loss, reduced accuracy  \n\n"
+        "- **Extreme darkness** (no visible face outline) --> detection fails for any model  \n"
+        "- **Low light** (face silhouette visible) --> low-light model handles well ✅  \n"
+        "- **Balanced lighting** --> optimal performance for both models ✅  \n"
+        "- **Overexposure** --> feature loss, reduced accuracy  \n\n"
         "Camera settings applied at startup: `BRIGHTNESS=130, GAIN=40, EXPOSURE=-6`  \n"
         "These values balance sensitivity and overexposure for typical indoor lighting."
     )

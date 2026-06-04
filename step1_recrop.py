@@ -96,4 +96,3 @@ for label in ["drowsy", "notdrowsy"]:
     print(f"{label:12s}: {saved}/{total} saved  ({failed} no-face/failed)")
 
 print(f"\nOutput: data/cropped_mp/")
-print("Ab step2_retrain.py chalao")

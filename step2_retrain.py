@@ -203,4 +203,4 @@ with torch.no_grad():
         y_pred.extend(preds)
 
 print(classification_report(y_true, y_pred, target_names=["Not Drowsy", "Drowsy"]))
-print("\nbest_model_v2.pth saved! Ab drowsy_detection.py mein use karo.")
+print("\nbest_model_v2.pth saved!")

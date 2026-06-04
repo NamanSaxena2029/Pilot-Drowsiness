@@ -122,9 +122,9 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 model = CNN_LSTM().to(device)
 
-# 🔥 LOAD PRETRAINED RGB MODEL (IMPORTANT)
+# LOAD PRETRAINED RGB MODEL (IMPORTANT)
 model.load_state_dict(torch.load("best_model_v2.pth", map_location=device))
-print("✅ Loaded best_model_v2 → fine-tuning for low light")
+print("Loaded best_model_v2 --> fine-tuning for low light")
 
 # ========================
 # LOSS + OPTIMIZER
@@ -178,7 +178,7 @@ for epoch in range(10):
     if val_acc > best_val_acc:
         best_val_acc = val_acc
         torch.save(model.state_dict(),"best_model_ll.pth")
-        print("🔥 saved best_model_ll.pth")
+        print("Saved best_model_ll.pth")
 
 # ========================
 # TEST

@@ -67,19 +67,19 @@ export default function ModelDetails() {
       <p style={{ color: "#7eb8f7", fontWeight: 700, marginBottom: 6, fontSize: "0.82rem" }}>Forward Pass</p>
       <div className="code-block">{`Input Shape : (Batch, 3 frames, 3 channels, 160px, 160px)
       ↓
-Flatten time into batch dimension  →  (B×3, 3, 160, 160)
+Flatten time into batch dimension  -->  (B×3, 3, 160, 160)
       ↓
-MobileNetV2 feature extraction     →  (B×3, 1280)
+MobileNetV2 feature extraction     -->  (B×3, 1280)
       ↓
-Reshape back to sequence           →  (B, 3, 1280)
+Reshape back to sequence           -->  (B, 3, 1280)
       ↓
-LSTM (hidden=128, layers=1)        →  (B, 3, 128)
+LSTM (hidden=128, layers=1)        -->  (B, 3, 128)
       ↓
-Take last timestep output          →  (B, 128)
+Take last timestep output          -->  (B, 128)
       ↓
-Fully connected classifier         →  (B, 2)
+Fully connected classifier         -->  (B, 2)
       ↓
-Softmax                            →  P(Not Drowsy), P(Drowsy)`}</div>
+Softmax                            -->  P(Not Drowsy), P(Drowsy)`}</div>
 
       <hr className="divider" />
 
@@ -127,7 +127,7 @@ Softmax                            →  P(Not Drowsy), P(Drowsy)`}</div>
       {trainTab === 1 && (
         <div>
           <div className="alert alert-success">
-            <strong>Fine-tuning strategy:</strong> Loaded <code>best_model_v2.pth</code> weights →
+            <strong>Fine-tuning strategy:</strong> Loaded <code>best_model_v2.pth</code> weights -->
             adapted to low-light enhanced dataset (<code>data/cropped_mp_ll/</code>) with lower
             learning rates to preserve learned features while adapting to IR-like visual patterns.
           </div>
@@ -199,7 +199,7 @@ Grayscale Fix   : cv2.COLOR_GRAY2RGB    (handles single-channel IR frames)`}</di
             ]}
           />
           <Table
-            headers={["Actual \\ Predicted", "→ Not Drowsy", "→ Drowsy"]}
+            headers={["Actual \\ Predicted", "--> Not Drowsy", "--> Drowsy"]}
             rows={[
               ["Not Drowsy (Actual)", "2794 ✅ True Not Drowsy", "179 ⚠️ False Alarm"],
               ["Drowsy (Actual)",     "144 ❌ Missed Drowsy",    "3456 ✅ True Drowsy"],
@@ -236,7 +236,7 @@ Grayscale Fix   : cv2.COLOR_GRAY2RGB    (handles single-channel IR frames)`}</di
             ]}
           />
           <Table
-            headers={["Actual \\ Predicted", "→ Not Drowsy", "→ Drowsy"]}
+            headers={["Actual \\ Predicted", "--> Not Drowsy", "--> Drowsy"]}
             rows={[
               ["Not Drowsy (Actual)", "2650 ✅ True Not Drowsy", "323 ⚠️ False Alarm"],
               ["Drowsy (Actual)",     "188 ❌ Missed Drowsy",    "3412 ✅ True Drowsy"],
@@ -292,7 +292,7 @@ Grayscale Fix   : cv2.COLOR_GRAY2RGB    (handles single-channel IR frames)`}</di
         headers={["Parameter", "Default Value", "Description"]}
         rows={[
           ["CNN Drowsy Threshold",        "0.55",              "Min CNN prob to start drowsy timer"],
-          ["CNN Instant Alert Threshold", "0.82",              "Above this → alert fires instantly"],
+          ["CNN Instant Alert Threshold", "0.82",              "Above this --> alert fires instantly"],
           ["Drowsy Sustained Duration",   "4.0 sec",           "Signal must persist before DROWSY"],
           ["EAR Closed Floor",            "0.15",              "Absolute closed-eye threshold"],
           ["EAR Closed Ratio",            "68% of baseline",   "Calibrated per face"],

@@ -3,7 +3,7 @@ PILOT DROWSINESS DETECTION — CORE ENGINE  (v2.1 — Fixed)
 =========================================
 Fixes over v2.0:
   - Low-light preprocessing (CLAHE on L-channel) so MediaPipe detects face in dim light
-  - EAR-only drowsy path: if eyes stay closed ≥ DROWSY_TIME_SEC → DROWSY (no CNN needed)
+  - EAR-only drowsy path: if eyes stay closed ≥ DROWSY_TIME_SEC --> DROWSY (no CNN needed)
   - CNN + EAR combined path (original) still works alongside
   - Inattentive timer = 10 sec (head/gaze away, eyes can be open)
   - Removed winsound dependency issue (graceful fallback)
@@ -191,7 +191,7 @@ class DrowsinessDetector:
     Real-time multi-face drowsiness and attention monitoring.
 
     Two drowsy paths:
-      Path A (EAR-only)  : Eyes stay closed ≥ DROWSY_TIME_SEC → DROWSY
+      Path A (EAR-only)  : Eyes stay closed ≥ DROWSY_TIME_SEC --> DROWSY
                            Works even when CNN buffer is not full yet.
       Path B (CNN+EAR)   : CNN prob ≥ thresh AND eyes closed, sustained
                            OR CNN instant threshold
@@ -246,7 +246,8 @@ class DrowsinessDetector:
         # ============================================================
         self.DROWSY_CNN_THRESH    = 0.78   # CNN prob to start CNN drowsy timer
         self.DROWSY_CNN_INSTANT   = 0.97   # CNN instant alert (no timer needed)
-        self.DROWSY_TIME_SEC      = 4.5    # Sustained closed-eye duration → DROWSY
+        self.DROWSY_TIME_SEC      = 4.5    # Sustained closed-eye duration --> DROWSY
+        self.FORCED_EAR_TIME_SEC  = 0.8
 
         self.EAR_CLOSED_FLOOR     = 0.15   # Lower floor — glasses reduce EAR naturally
         self.EAR_FORCED_THRESHOLD = 0.07   # Sudden forced-close threshold
@@ -264,7 +265,7 @@ class DrowsinessDetector:
         self.PITCH_THRESH         = 0.30   # Normalized head down tilt
         self.GAZE_THRESH          = 25.0   # Iris offset (px) for sideways gaze
 
-        self.INATTENTIVE_SEC      = 15.0   # Sustained away-look → NOT ATTENTIVE
+        self.INATTENTIVE_SEC      = 15.0   # Sustained away-look --> NOT ATTENTIVE
 
         self.BEEP_COOLDOWN_SEC    = 3.0
         self._last_beep_time      = 0.0

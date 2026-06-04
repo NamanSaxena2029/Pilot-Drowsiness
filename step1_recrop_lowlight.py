@@ -106,4 +106,4 @@ for label in ["drowsy","notdrowsy"]:
 
 detector.close()
 
-print("✅ LOW LIGHT RECROP DONE → data/cropped_mp_ll/")
+print("LOW LIGHT RECROP DONE --> data/cropped_mp_ll/")
