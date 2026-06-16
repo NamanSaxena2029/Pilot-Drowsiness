@@ -29,9 +29,7 @@ A real-time AI-based system to detect driver/pilot drowsiness using webcam video
 1. Clone the repository:
 
 git clone
-
 https://github.com/NamanSaxena2029/Pilot-Drowsiness.git
-
 cd pilot-drowsiness-detection
 
 2. Install dependencies:
@@ -45,7 +43,6 @@ streamlit run app.py
 ---
 
 pilot-drowsiness/
-│
 ├── app.py
 ├── drowsy_detection.py
 ├── step1_recrop.py
