@@ -1,20 +1,20 @@
-✈️ Pilot Drowsiness Detection System
+# ✈️ Pilot Drowsiness Detection System
 
-A real-time AI-based system to detect driver/pilot drowsiness using webcam video.
+A real-time AI-based system to detect **pilot/driver drowsiness** using webcam video.
 
 ---
 
-🚀 Features
+## 🚀 Features
 
-- Detects Drowsiness, Inattentiveness, and Eye Closure
-- Uses CNN + LSTM model
-- MediaPipe-based face & eye tracking
-- Works in low-light conditions
+- Detects **Drowsiness, Inattentiveness, and Eye Closure**
+- Uses **CNN + LSTM model**
+- MediaPipe-based **face & eye tracking**
+- Works in **low-light conditions**
 - Real-time webcam monitoring
 
 ---
 
-🛠️ Tech Stack
+## 🛠️ Tech Stack
 
 - Python
 - PyTorch
@@ -24,57 +24,64 @@ A real-time AI-based system to detect driver/pilot drowsiness using webcam video
 
 ---
 
-▶️ How to Run
+## ▶️ How to Run
 
-1. Clone the repository:
-
-git clone
-https://github.com/NamanSaxena2029/Pilot-Drowsiness.git
+### 1. Clone the repository
+```bash
+git clone https://github.com/NamanSaxena2029/Pilot-Drowsiness.git
 cd pilot-drowsiness-detection
+```
 
-2. Install dependencies:
-
+### 2. Install dependencies
+```bash
 pip install -r requirements.txt
+```
 
-3. Run the app:
-
+### 3. Run the app
+```bash
 streamlit run app.py
+```
 
 ---
 
+## 📁 Project Structure
+
+```
 pilot-drowsiness/
-├── app.py
-├── drowsy_detection.py
-├── step1_recrop.py
-├── step2_retrain.py
-├── step1_recrop_lowlight.py
-├── step2_finetune_ll.py
+│── app.py
+│── drowsy_detection.py
+│── step1_recrop.py
+│── step2_retrain.py
+│── step1_recrop_lowlight.py
+│── step2_finetune_ll.py
 │
-├── best_model_ll.pth
-├── best_model_v2.pth
-├── face_landmarker.task
+│── best_model_ll.pth
+│── best_model_v2.pth
+│── face_landmarker.task
 │
-├── requirements.txt
-├── README.md
+│── requirements.txt
+│── README.md
 │
-├── confusion_matrix_ll.png
-├── confusion_matrix_v2.png
-├── roc_curve_ll.png
-├── roc_curve_v2.png
+│── confusion_matrix_ll.png
+│── confusion_matrix_v2.png
+│── roc_curve_ll.png
+│── roc_curve_v2.png
 │
-├── eval_results.py
-├── eval_results1.py
+│── eval_results.py
+│── eval_results1.py
+```
 
+---
 
-⚠️ Notes
+## ⚠️ Notes
 
-- Ensure webcam access is enabled
-- Works best under moderate lighting
+- Ensure **webcam access is enabled**
+- Works best under **moderate lighting**
 - Extremely dark or overexposed conditions may affect detection
 
 ---
 
-📌 Author
+## 👨‍💻 Authors
 
-Naman Saxena
-Nilesh Sahu
+- Naman Saxena  
+- Nilesh Sahu
