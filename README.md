@@ -1,20 +1,17 @@
-# ✈️ Pilot Drowsiness Detection System
+# Pilot Drowsiness Detection System
 
-A real-time AI-based system to detect **pilot/driver drowsiness** using webcam video.
+A real-time AI-based pilot/driver drowsiness detection system that uses webcam video streams to identify drowsiness, eye closure, and inattentive behavior. The system combines MediaPipe facial landmark tracking with CNN-LSTM models for temporal analysis and classification.
 
----
+## Features
 
-## 🚀 Features
+- Real-time drowsiness detection
+- Eye closure and inattentiveness monitoring
+- CNN-LSTM based classification
+- MediaPipe face and eye landmark tracking
+- Low-light optimized model
+- Streamlit web interface
 
-- Detects **Drowsiness, Inattentiveness, and Eye Closure**
-- Uses **CNN + LSTM model**
-- MediaPipe-based **face & eye tracking**
-- Works in **low-light conditions**
-- Real-time webcam monitoring
-
----
-
-## 🛠️ Tech Stack
+## Technology Stack
 
 - Python
 - PyTorch
@@ -24,64 +21,135 @@ A real-time AI-based system to detect **pilot/driver drowsiness** using webcam v
 
 ---
 
-## ▶️ How to Run
+## Project Structure
 
-### 1. Clone the repository
-```bash
-git clone https://github.com/NamanSaxena2029/Pilot-Drowsiness.git
-cd pilot-drowsiness-detection
+```text
+pilot-drowsiness/
+│
+├── app.py
+├── drowsy_detection.py
+├── step1_recrop.py
+├── step2_retrain.py
+├── step1_recrop_lowlight.py
+├── step2_finetune_ll.py
+│
+├── best_model_v2.pth
+├── best_model_ll.pth
+├── face_landmarker.task
+│
+├── requirements.txt
+├── README.md
+│
+├── confusion_matrix_v2.png
+├── roc_curve_v2.png
+├── confusion_matrix_ll.png
+├── roc_curve_ll.png
+│
+├── eval_results.py
+└── eval_results1.py
 ```
 
-### 2. Install dependencies
+---
+
+## Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/NamanSaxena2029/Pilot-Drowsiness.git
+cd Pilot-Drowsiness
+```
+
+Install dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Run the app
+Run the application:
+
 ```bash
 streamlit run app.py
 ```
 
 ---
 
-## 📁 Project Structure
+## Results
 
-```
-pilot-drowsiness/
-│── app.py
-│── drowsy_detection.py
-│── step1_recrop.py
-│── step2_retrain.py
-│── step1_recrop_lowlight.py
-│── step2_finetune_ll.py
-│
-│── best_model_ll.pth
-│── best_model_v2.pth
-│── face_landmarker.task
-│
-│── requirements.txt
-│── README.md
-│
-│── confusion_matrix_ll.png
-│── confusion_matrix_v2.png
-│── roc_curve_ll.png
-│── roc_curve_v2.png
-│
-│── eval_results.py
-│── eval_results1.py
-```
+### Normal Lighting Conditions
 
----
+| Metric | Value |
+|----------|----------|
+| Accuracy | 95% |
+| Precision | 95% |
+| Recall | 95% |
+| F1 Score | 95% |
 
-## ⚠️ Notes
+#### Classification Report
 
-- Ensure **webcam access is enabled**
-- Works best under **moderate lighting**
-- Extremely dark or overexposed conditions may affect detection
+| Class | Precision | Recall | F1-Score |
+|---------|---------|---------|---------|
+| Not Drowsy | 0.95 | 0.94 | 0.94 |
+| Drowsy | 0.95 | 0.96 | 0.95 |
+
+#### Confusion Matrix
+
+![Normal Light Confusion Matrix](confusion_matrix_v2.png)
+
+#### ROC Curve
+
+![Normal Light ROC Curve](roc_curve_v2.png)
 
 ---
 
-## 👨‍💻 Authors
+### Low-Light Conditions
 
-- Naman Saxena  
-- Nilesh Sahu
+| Metric | Value |
+|----------|----------|
+| Accuracy | 92% |
+| Precision | 92% |
+| Recall | 92% |
+| F1 Score | 92% |
+
+#### Classification Report
+
+| Class | Precision | Recall | F1-Score |
+|---------|---------|---------|---------|
+| Not Drowsy | 0.93 | 0.89 | 0.91 |
+| Drowsy | 0.91 | 0.95 | 0.93 |
+
+#### Confusion Matrix
+
+![Low Light Confusion Matrix](confusion_matrix_ll.png)
+
+#### ROC Curve
+
+![Low Light ROC Curve](roc_curve_ll.png)
+
+---
+
+## Model Pipeline
+
+1. Face detection using MediaPipe.
+2. Eye region extraction and preprocessing.
+3. Feature extraction using CNN.
+4. Temporal sequence modeling using LSTM.
+5. Classification into:
+   - Drowsy
+   - Not Drowsy
+
+---
+
+## Limitations
+
+- Performance may degrade in extremely dark environments.
+- Webcam quality affects detection accuracy.
+- Occlusions such as sunglasses can impact landmark detection.
+
+---
+
+## Authors
+
+**Naman Saxena**
+
+**Nilesh Sahu**
