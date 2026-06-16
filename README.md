@@ -139,12 +139,13 @@ streamlit run app.py
    - Not Drowsy
 
 ---
-
+The low-light model achieved 92% accuracy without the use of infrared sensors, demonstrating robustness under challenging illumination conditions.
+---
 ## Limitations
 
-- Performance may degrade in extremely dark environments.
-- Webcam quality affects detection accuracy.
-- Occlusions such as sunglasses can impact landmark detection.
+- Performance may degrade in near-zero illumination environments where facial landmarks are not sufficiently visible.
+- The current system relies on visible-spectrum camera input and does not utilize infrared (IR) imaging.
+- Extreme facial occlusions may affect landmark extraction and classification performance.
 
 ---
 
