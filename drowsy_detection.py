@@ -94,6 +94,10 @@ LEFT_EAR_PT  = 234
 RIGHT_EAR_PT = 454
 LEFT_EYE_C   = 159
 RIGHT_EYE_C  = 386
+MOUTH_TOP    = 13
+MOUTH_BOTTOM = 14
+MOUTH_LEFT   = 78
+MOUTH_RIGHT  = 308
 
 
 # ==============================================================
@@ -132,6 +136,15 @@ def compute_gaze_offset(landmarks, w, h):
     r_eye_c = center(RIGHT_EYE)
     return float((np.linalg.norm(l_iris - l_eye_c) + np.linalg.norm(r_iris - r_eye_c)) / 2.0)
 
+def compute_mar(landmarks, w, h):
+    top    = np.array([landmarks[MOUTH_TOP].x * w,    landmarks[MOUTH_TOP].y * h])
+    bottom = np.array([landmarks[MOUTH_BOTTOM].x * w, landmarks[MOUTH_BOTTOM].y * h])
+    left   = np.array([landmarks[MOUTH_LEFT].x * w,   landmarks[MOUTH_LEFT].y * h])
+    right  = np.array([landmarks[MOUTH_RIGHT].x * w,  landmarks[MOUTH_RIGHT].y * h])
+
+    vertical   = np.linalg.norm(top - bottom)
+    horizontal = np.linalg.norm(left - right) + 1e-6
+    return float(vertical / horizontal)
 
 def crop_face(frame, landmarks, w, h, pad=0.20):
     xs = [lm.x * w for lm in landmarks]
@@ -166,6 +179,14 @@ class FaceState:
         self.inatt_start = None
         self.is_inatt    = False
 
+        # Forced-shut tracking (short sustained closure)
+        self.forced_start = None
+        
+        # Yawn state
+        self.yawn_start = None
+        self.is_yawning = False
+        self.yawn_count = deque(maxlen=50)   # recent yawn timestamps — fatigue tracking
+
         self.ear_history = deque(maxlen=6)
         self.status      = "ACTIVE"
         self.cnn_prob    = 0.0
@@ -182,6 +203,9 @@ class FaceState:
         self.inatt_start = None
         self.is_inatt    = False
 
+    def reset_yawn(self):
+        self.yawn_start = None
+        self.is_yawning = False
 
 # ==============================================================
 # MAIN DETECTOR CLASS
@@ -241,24 +265,25 @@ class DrowsinessDetector:
         self._ear_baseline_samples = {}
         self._ear_thresholds       = {}
 
+        self._ear_baseline_samples = {}
+        self._ear_thresholds       = {}
+        self._ear_open_baseline    = {}
+
         # ============================================================
         # THRESHOLDS
         # ============================================================
         self.DROWSY_CNN_THRESH    = 0.78   # CNN prob to start CNN drowsy timer
         self.DROWSY_CNN_INSTANT   = 0.97   # CNN instant alert (no timer needed)
         self.DROWSY_TIME_SEC      = 4.5    # Sustained closed-eye duration --> DROWSY
-        self.FORCED_EAR_TIME_SEC  = 0.8
+        self.FORCED_MIN_SEC       = 0.35
+        self.FORCED_MAX_SEC       = 2.0 
 
-        self.EAR_CLOSED_FLOOR     = 0.15   # Lower floor — glasses reduce EAR naturally
-        self.EAR_FORCED_THRESHOLD = 0.07   # Sudden forced-close threshold
-        self.EAR_CLOSED_RATIO     = 0.68   # 62% of baseline = closed (was 72%, glasses pehnte ho)
+        self.EAR_CLOSED_FLOOR     = 0.15
+        self.EAR_FORCED_THRESHOLD = 0.07
+        self.EAR_CLOSED_RATIO     = 0.68
 
-        # How many open-eye samples to collect before calibrating threshold
-        # 60 samples = ~2 sec at 30fps — enough to get stable baseline
         self.EAR_BASELINE_SAMPLES = 60
 
-        # Minimum EAR to count as "open eye" during baseline collection
-        # Lowered to 0.17 so glasses users' frames are not skipped
         self.EAR_BASELINE_MIN     = 0.17
 
         self.YAW_THRESH           = 0.40   # Normalized head left-right turn
@@ -266,7 +291,10 @@ class DrowsinessDetector:
         self.GAZE_THRESH          = 25.0   # Iris offset (px) for sideways gaze
 
         self.INATTENTIVE_SEC      = 15.0   # Sustained away-look --> NOT ATTENTIVE
-
+        self.MAR_YAWN_THRESH   = 0.55    # mouth-open ratio — calibrate on your footage
+        self.YAWN_SUSTAIN_SEC  = 1.2     # mouth must stay open this long to count as yawn
+        self.YAWN_FREQ_WINDOW  = 60.0    # rolling window (sec) to count yawn frequency
+        self.YAWN_FREQ_ALERT   = 3       # this many yawns in window = fatigue flag
         self.BEEP_COOLDOWN_SEC    = 3.0
         self._last_beep_time      = 0.0
 
@@ -300,6 +328,8 @@ class DrowsinessDetector:
 
             threshold = max(self.EAR_CLOSED_FLOOR, baseline * ratio)
             self._ear_thresholds[face_id] = threshold
+            self._ear_thresholds[face_id] = threshold
+            self._ear_open_baseline[face_id] = baseline
             print(f"[INFO] Face {face_id} EAR baseline={baseline:.3f}, "
                   f"ratio={ratio}, closed threshold={threshold:.3f}")
 
@@ -309,12 +339,26 @@ class DrowsinessDetector:
         # extra safety margin
         return ear_val < (threshold - 0.015)
 
-    def _forced_close(self, face_id, ear_val):
+    def _forced_close(self, face_id, ear_val, now):
         state = self.face_states.get(face_id)
-        if state is None or len(state.ear_history) < 3:
+        if state is None:
             return False
-        recent_avg = float(np.mean(list(state.ear_history)[-3:]))
-        return ear_val < self.EAR_FORCED_THRESHOLD and recent_avg > 0.22
+
+        baseline_open = self._ear_open_baseline.get(face_id)
+        if baseline_open is None:
+            return False
+
+        very_closed = ear_val < baseline_open * 0.55   # eyes clearly shut (blink-level bhi ho sakta)
+
+        if very_closed:
+            if state.forced_start is None:
+                state.forced_start = now
+            elapsed = now - state.forced_start
+            # blink se zyada der but drowsy-timer se kam der tak band = forced
+            return self.FORCED_MIN_SEC <= elapsed <= self.FORCED_MAX_SEC
+        else:
+            state.forced_start = None
+            return False
 
     # ----------------------------------------------------------
     def process_frame(self, frame: np.ndarray):
@@ -368,7 +412,25 @@ class DrowsinessDetector:
                 gaze = compute_gaze_offset(face_lms, w, h)
             except Exception:
                 gaze = 0.0
+                
+            try:
+                mar = compute_mar(face_lms, w, h)
+            except Exception:
+                mar = 0.0
 
+            if mar > self.MAR_YAWN_THRESH:
+                if state.yawn_start is None:
+                    state.yawn_start = now
+                elif (now - state.yawn_start) >= self.YAWN_SUSTAIN_SEC and not state.is_yawning:
+                    state.is_yawning = True
+                    state.yawn_count.append(now)
+            else:
+                state.reset_yawn()
+
+            while state.yawn_count and (now - state.yawn_count[0] > self.YAWN_FREQ_WINDOW):
+                state.yawn_count.popleft()
+
+            frequent_yawning = len(state.yawn_count) >= self.YAWN_FREQ_ALERT
             # ---- CNN-LSTM inference ----
             crop, bbox = crop_face(enhanced, face_lms, w, h, pad=0.20)
             if crop is not None:
@@ -401,7 +463,8 @@ class DrowsinessDetector:
             # DECISION LOGIC
             # ============================================================
 
-            forced = self._forced_close(face_id, ear_avg)
+            forced = self._forced_close(face_id, ear_avg, now)
+            print(f"EAR now: {ear_avg:.3f} | recent_avg: {float(np.mean(list(state.ear_history)[-4:-1])) if len(state.ear_history)>=4 else 'N/A'} | open_baseline: 0.285")
             closed = self._eyes_closed(face_id, ear_avg) and not forced
 
             # --- PATH A: Pure EAR drowsy (eyes closed timer) ---
@@ -456,6 +519,13 @@ class DrowsinessDetector:
             elif is_drowsy_final:
                 state.status = "DROWSY"
                 box_color    = (0, 0, 255)
+                self._beep()
+            elif state.is_yawning:
+                state.status = "YAWNING"
+                box_color    = (255, 0, 200)
+            elif frequent_yawning:
+                state.status = "FATIGUE (frequent yawning)"
+                box_color    = (180, 0, 255)
                 self._beep()
             elif state.is_inatt:
                 state.status = "NOT ATTENTIVE"

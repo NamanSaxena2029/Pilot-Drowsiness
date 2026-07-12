@@ -308,10 +308,12 @@ if page == "🎥 Live Detection":
                 badges = []
                 for fid, state in face_states.items():
                     icon = {
-                        "DROWSY"           : "🔴",
-                        "NOT ATTENTIVE"    : "🟠",
-                        "EYES FORCED SHUT" : "🟡",
-                        "ACTIVE"           : "🟢",
+                        "DROWSY"                      : "🔴",
+                        "NOT ATTENTIVE"                : "🟠",
+                        "EYES FORCED SHUT"             : "🟡",
+                        "YAWNING"                      : "🥱",
+                        "FATIGUE (frequent yawning)"   : "😮‍💨",
+                        "ACTIVE"                       : "🟢",
                     }.get(state.status, "⚪")
 
                     badges.append(
