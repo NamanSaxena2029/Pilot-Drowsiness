@@ -4,7 +4,7 @@ import mediapipe as mp
 from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision as mp_vision
 from mediapipe.tasks.python.vision import FaceLandmarkerOptions, FaceLandmarker
-
+ 
 # ---------------- LOW LIGHT ENHANCEMENT ----------------
 def enhance_low_light(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)

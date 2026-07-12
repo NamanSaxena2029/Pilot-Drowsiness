@@ -83,7 +83,7 @@ for label in ["drowsy", "notdrowsy"]:
         out_path = os.path.join(output_folder, fname)
         cv2.imwrite(out_path, crop)
         total_saved[label] += 1
-
+        
 detector.close()
 
 print("\n" + "="*50)

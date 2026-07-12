@@ -104,7 +104,7 @@ plt.xlabel("Predicted"); plt.ylabel("Actual")
 plt.tight_layout()
 plt.savefig("confusion_matrix_ll.png", dpi=150)
 plt.show()
-
+ 
 # ROC Curve
 fpr, tpr, _ = roc_curve(y_true, y_scores)
 roc_auc = auc(fpr, tpr)

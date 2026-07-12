@@ -193,6 +193,6 @@ with torch.no_grad():
         preds = model(imgs).argmax(1).cpu().numpy()
         y_true.extend(labels.numpy())
         y_pred.extend(preds)
-
+ 
 print("\nFINAL REPORT:")
 print(classification_report(y_true,y_pred))

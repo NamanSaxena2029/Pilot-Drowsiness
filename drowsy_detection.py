@@ -379,7 +379,7 @@ class DrowsinessDetector:
                 crop = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
             x1, y1, x2, y2 = bbox
             cnn_prob = 0.0
-
+ 
             if crop is not None:
                 try:
                     img_rgb = cv2.cvtColor(crop, cv2.COLOR_BGR2RGB)

@@ -158,7 +158,7 @@ for epoch in range(15):
         total   += labels.size(0)
 
     train_acc = correct / total
-
+ 
     # VALIDATION
     model.eval()
     val_correct, val_total = 0, 0
