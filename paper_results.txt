@@ -1,0 +1,47 @@
+====================================================================== 
+T1  PER-DRIVER LODO, logistic regression, per-driver norm, no_pose
+ ======================================================================
+candidate features: 33 (expect 33) | final no_pose: 26 (expect 26)
+          acc  recall  specificity  bal_acc    auc        n
+driver                                                     
+001     0.717   0.834        0.596    0.715  0.829  18862.0
+002     0.778   0.716        0.862    0.789  0.878  18328.0
+005     0.806   0.781        0.843    0.812  0.905  21884.0
+006     0.604   0.793        0.471    0.632  0.652   6682.0
+MEAN    0.726   0.781        0.693    0.737  0.816  65756.0
+
+====================================================================== 
+T2  NORMALISATION VARIANTS (mean over 4 held-out drivers)
+ ======================================================================
+                                             acc  recall  specificity  bal_acc    auc  worst_driver_acc
+variant                                                                                                
+per-driver, whole recording                0.726   0.781        0.693    0.737  0.816             0.604
+per-driver, running first 900 frames/clip  0.748   0.780        0.728    0.754  0.842             0.683
+no per-driver normalisation                0.726   0.795        0.665    0.730  0.822             0.632
+
+====================================================================== 
+T3  FEATURE-SET ABLATION (per-driver norm, mean over 4 held-out drivers)
+ ======================================================================
+             n_features    acc  recall  bal_acc    auc  worst_driver_acc
+feature_set                                                             
+all                  33  0.724   0.781    0.732  0.802             0.622
+no_pose              26  0.726   0.781    0.737  0.816             0.604
+ear_only             11  0.667   0.702    0.676  0.744             0.646
+eyes_only            16  0.659   0.660    0.664  0.727             0.633
+no_blend             23  0.665   0.676    0.667  0.728             0.650
+
+====================================================================== 
+T4  RANDOM FRAME SPLIT (5-fold, shuffled) vs LODO, same model/features
+ ======================================================================
+random 5-fold : acc 0.786 (sd 0.002) recall 0.771 auc 0.879
+LODO (T1)     : acc 0.726 recall 0.781 auc 0.816
+same-driver, later part of each clip held out : acc 0.753 recall 0.706 auc 0.881
+
+====================================================================== 
+T5  CPU LATENCY / SIZE
+ ======================================================================
+machine: Intel64 Family 6 Model 141 Stepping 1, GenuineIntel | cpu count: 12 | python 3.10.11
+landmark LR: 0.203 ms per frame for classification only (batch=1)  ->  4920 frames/s
+landmark LR pickled size: 1.9 KB
+CNN-LSTM timing skipped (tensorflow not available or failed): No module named 'tensorflow'
+process RSS now: 222 MB

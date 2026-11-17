@@ -1,0 +1,38 @@
+====================================================================== 
+PART A1  NORMALISATION VARIANTS WITH 95% BLOCK-BOOTSTRAP CIs (mean accuracy over 4 drivers)
+ ======================================================================
+variant                 acc           95% CI    diff vs whole     95% CI of diff  P(diff<=0)
+whole recording       0.726  [0.684, 0.768]           +0.000  [+0.000, +0.000]  1.000
+running K=300         0.718  [0.679, 0.757]           -0.008  [-0.043, +0.033]  0.654
+running K=900         0.748  [0.709, 0.789]           +0.022  [+0.007, +0.037]  0.006
+running K=1800        0.752  [0.712, 0.792]           +0.025  [+0.013, +0.038]  0.000
+none                  0.726  [0.683, 0.769]           -0.001  [-0.039, +0.037]  0.506
+
+per-driver accuracy of each variant:
+     whole recording  running K=300  running K=900  running K=1800   none
+001            0.717          0.695          0.704           0.715  0.675
+002            0.778          0.630          0.810           0.800  0.786
+005            0.806          0.818          0.796           0.811  0.812
+006            0.604          0.730          0.683           0.679  0.632
+
+====================================================================== 
+PART A2  LR WITH 2 vs 3 TRAINING DRIVERS (whole-recording normalisation), 95% CIs
+ ======================================================================
+3 train drivers              acc 0.726  95% CI [0.684, 0.768]
+2 train drivers (draw 0)     acc 0.734  95% CI [0.692, 0.776]
+2 train drivers (draw 1)     acc 0.640  95% CI [0.593, 0.683]
+2 train drivers (draw 2)     acc 0.734  95% CI [0.692, 0.776]
+mean over the three 2-driver draws: 0.703
+
+====================================================================== 
+PART B  END-TO-END CPU TIMING
+ ======================================================================
+machine: Intel64 Family 6 Model 141 Stepping 1, GenuineIntel | cpu count: 12 | python 3.10.11
+rolling features from a 60-frame buffer (numpy, approximate): 0.053 ms/frame
+logistic regression: 0.140 ms/frame; model size 1.9 KB
+MediaPipe FaceLandmarker (+blendshapes), 60 frames of size 404x390: 9.6 ms/frame (model: face_landmarker.task)
+END-TO-END landmark pipeline: 9.8 ms/frame  ->  102 frames/s on this CPU
+no saved model found: timing the same architecture with random weights (speed is identical)
+CNN-LSTM inference: 65.3 ms per 3-frame window (batch=1, CPU) | parameters 2,979,521 (~11.9 MB float32)
+process memory with TF model loaded: 851 MB (before first predict 755 MB)
+process memory (landmark pipeline only, no TF) can be read from Task Manager; Python RSS now 851 MB
