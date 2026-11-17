@@ -6,3 +6,4 @@ data/
 *.zip
 drowsy_screenshots/
 venv/
+.venv/

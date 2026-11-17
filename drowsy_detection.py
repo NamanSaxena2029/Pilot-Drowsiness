@@ -34,23 +34,24 @@ except ImportError:
 # Apply CLAHE on the L-channel (LAB space) to brighten dark frames
 # so MediaPipe can detect faces in dim/cockpit lighting
 # ==============================================================
-def enhance_low_light(frame: np.ndarray) -> np.ndarray:
+def enhance_low_light(frame: np.ndarray, brightness: float = None) -> np.ndarray:
     """
     Boost contrast in dark frames using CLAHE on LAB L-channel.
     Only applied when mean brightness < 80 (out of 255).
     Returns enhanced BGR frame.
     """
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    mean_brightness = float(gray.mean())
+    if brightness is None:
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        brightness = float(gray.mean())
 
-    if mean_brightness >= 80:
+    if brightness >= 80:
         return frame  # Good light — no change
 
     lab   = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
     l, a, b = cv2.split(lab)
 
     # Stronger clip limit for very dark frames
-    clip = 3.0 if mean_brightness > 50 else 5.0
+    clip = 3.0 if brightness > 50 else 5.0
     clahe = cv2.createCLAHE(clipLimit=clip, tileGridSize=(8, 8))
     l_eq  = clahe.apply(l)
 
@@ -237,6 +238,7 @@ class DrowsinessDetector:
             torch.load(model_path, map_location=self.device, weights_only=True)
         )
         self.model.eval()
+        self.model_path = str(model_path).lower()
         print(f"[INFO] Model loaded: {model_path}")
 
         options = FaceLandmarkerOptions(
@@ -247,9 +249,10 @@ class DrowsinessDetector:
             min_face_detection_confidence=0.3,
             min_face_presence_confidence=0.3,
             min_tracking_confidence=0.3,
-            running_mode=mp_vision.RunningMode.IMAGE
+            running_mode=mp_vision.RunningMode.VIDEO
         )
         self.landmarker  = FaceLandmarker.create_from_options(options)
+        self._last_timestamp_ms = 0
         self.max_faces   = max_faces
         self.face_states = {}
         print(f"[INFO] MediaPipe FaceLandmarker ready (max faces: {max_faces})")
@@ -297,6 +300,19 @@ class DrowsinessDetector:
         self.YAWN_FREQ_ALERT   = 3       # this many yawns in window = fatigue flag
         self.BEEP_COOLDOWN_SEC    = 3.0
         self._last_beep_time      = 0.0
+
+    # ----------------------------------------------------------
+    def load_model(self, model_path: str):
+        self.model.load_state_dict(
+            torch.load(model_path, map_location=self.device, weights_only=True)
+        )
+        self.model.eval()
+        self.model_path = str(model_path).lower()
+
+        for state in self.face_states.values():
+            state.seq_buffer.clear()
+            state.prob_buffer.clear()
+            state.cnn_prob = 0.0
 
     # ----------------------------------------------------------
     def _beep(self):
@@ -361,7 +377,7 @@ class DrowsinessDetector:
             return False
 
     # ----------------------------------------------------------
-    def process_frame(self, frame: np.ndarray):
+    def process_frame(self, frame: np.ndarray, brightness: float = None):
         """
         Process a single BGR camera frame with low-light enhancement.
         Returns: (annotated_frame, face_states_dict)
@@ -369,21 +385,20 @@ class DrowsinessDetector:
         h, w = frame.shape[:2]
 
         # --- Low-light enhancement before MediaPipe ---
-        enhanced = enhance_low_light(frame)
-
-        # HARD BOOST (extreme darkness)
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        brightness = gray.mean()
-
+        if brightness is None:
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            brightness = float(gray.mean())
         if brightness < 80:
-            enhanced = enhance_low_light(frame)
+            enhanced = enhance_low_light(frame, brightness)
             enhanced = cv2.convertScaleAbs(enhanced, alpha=1.5, beta=25)
         else:
-            enhanced = frame.copy()
+            enhanced = frame
 
         rgb    = cv2.cvtColor(enhanced, cv2.COLOR_BGR2RGB)
         mp_img = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
-        result = self.landmarker.detect(mp_img)
+        timestamp_ms = max(time.monotonic_ns() // 1_000_000, self._last_timestamp_ms + 1)
+        self._last_timestamp_ms = timestamp_ms
+        result = self.landmarker.detect_for_video(mp_img, timestamp_ms)
 
         output = frame.copy()  # Draw on original (not enhanced) for natural look
         now    = time.time()
@@ -432,13 +447,8 @@ class DrowsinessDetector:
 
             frequent_yawning = len(state.yawn_count) >= self.YAWN_FREQ_ALERT
             # ---- CNN-LSTM inference ----
-            crop, bbox = crop_face(enhanced, face_lms, w, h, pad=0.20)
-            if crop is not None:
-                if brightness < 80:
-                    crop = cv2.convertScaleAbs(crop, alpha=1.2, beta=10)
-                gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
-                gray = cv2.equalizeHist(gray)
-                crop = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+            crop_pad = 0.2 if self.model_path.lower().endswith("_ll.pth") else 0.15
+            crop, bbox = crop_face(frame, face_lms, w, h, pad=crop_pad)
             x1, y1, x2, y2 = bbox
             cnn_prob = 0.0
  
@@ -450,7 +460,7 @@ class DrowsinessDetector:
 
                     if len(state.seq_buffer) == 3:
                         seq = torch.stack(list(state.seq_buffer)).unsqueeze(0).to(self.device)
-                        with torch.no_grad():
+                        with torch.inference_mode():
                             logits   = self.model(seq)
                             cnn_prob = torch.softmax(logits, dim=1)[0][1].item()
                         state.prob_buffer.append(cnn_prob)
@@ -464,7 +474,6 @@ class DrowsinessDetector:
             # ============================================================
 
             forced = self._forced_close(face_id, ear_avg, now)
-            print(f"EAR now: {ear_avg:.3f} | recent_avg: {float(np.mean(list(state.ear_history)[-4:-1])) if len(state.ear_history)>=4 else 'N/A'} | open_baseline: 0.285")
             closed = self._eyes_closed(face_id, ear_avg) and not forced
 
             # --- PATH A: Pure EAR drowsy (eyes closed timer) ---
@@ -597,8 +606,6 @@ class DrowsinessDetector:
         n_active = len(active)
 
         # Low light indicator
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        brightness = float(gray.mean())
         light_tag  = "  🌙 LOW LIGHT" if brightness < 80 else ""
 
         summary = (f"Faces: {n_active}   "

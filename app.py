@@ -156,7 +156,7 @@ if page == "🎥 Live Detection":
         )
         max_faces = st.selectbox(
             "Maximum faces to track",
-            options=[1, 2, 3], index=2,
+            options=[1, 2, 3], index=0,
             help="Reduce to 1 for single-pilot use (faster inference)."
         )
         cnn_thresh = st.slider(
@@ -200,56 +200,38 @@ if page == "🎥 Live Detection":
     if st.session_state.cam_running:
         from drowsy_detection import DrowsinessDetector
 
-        cap = cv2.VideoCapture(0)
         cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-
-        # IMPORTANT FIX
-        cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.75)
-        cap.set(cv2.CAP_PROP_AUTO_WB, 1)
-
-        # AUTO SETTINGS (IMPORTANT)
-        cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.75)
-        cap.set(cv2.CAP_PROP_AUTO_WB, 1)
-
         detector = None
         current_mode = None
-        last_switch_time = 0
+        last_switch_time = 0.0
 
         if not cap.isOpened():
             st.error("❌ Camera not found. Please check your camera connection.")
             st.session_state.cam_running = False
         else:
+            for property_id, value in (
+                (cv2.CAP_PROP_FRAME_WIDTH, 640),
+                (cv2.CAP_PROP_FRAME_HEIGHT, 480),
+                (cv2.CAP_PROP_AUTO_EXPOSURE, 0.75),
+                (cv2.CAP_PROP_AUTO_WB, 1),
+            ):
+                try:
+                    cap.set(property_id, value)
+                except cv2.error:
+                    pass
+
             info_placeholder.info("Camera active. Press **Stop** to end session.")
 
             while st.session_state.cam_running:
                 ret, frame = cap.read()
-
-                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                brightness = np.percentile(gray, 75)
-
-                # adaptive correction
-                if brightness < 60:
-                    frame = cv2.convertScaleAbs(frame, alpha=1.4, beta=25)
-
-                elif brightness > 180:
-                    frame = cv2.convertScaleAbs(frame, alpha=0.7, beta=-30)
                 if not ret:
                     st.warning("⚠️ Frame capture failed — retrying...")
                     time.sleep(0.1)
                     continue
 
-                # SMART brightness
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-                h, w = gray.shape
-                # better brightness estimation
-                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                # histogram based brightness (much accurate)
-                brightness = np.percentile(gray, 75)
-                # NEW thresholds
+                mean_brightness = float(gray.mean())
+                brightness = float(np.percentile(gray, 75))
                 if brightness < 70:
                     mode = "low_light"
                     model_path = "best_model_ll.pth"
@@ -257,8 +239,7 @@ if page == "🎥 Live Detection":
                     mode = "normal"
                     model_path = "best_model_v2.pth"
 
-                # 🔥 SWITCH MODEL (only when needed + cooldown)
-                if (detector is None or mode != current_mode) and (time.time() - last_switch_time > 2):
+                if detector is None:
                     detector = DrowsinessDetector(
                         model_path=model_path,
                         landmarker_path="face_landmarker.task",
@@ -268,19 +249,24 @@ if page == "🎥 Live Detection":
                     detector.DROWSY_TIME_SEC   = drowsy_time
                     detector.INATTENTIVE_SEC   = inatt_time
                     detector.DROWSY_CNN_THRESH = cnn_thresh
-
                     current_mode     = mode
                     last_switch_time = time.time()
-
+                    st.toast(f"🚀 Switched to {'🌙 Low-Light' if mode == 'low_light' else '☀️ Normal'} model")
+                elif mode != current_mode and (time.time() - last_switch_time > 2):
+                    detector.load_model(model_path)
+                    current_mode     = mode
+                    last_switch_time = time.time()
                     st.toast(f"🚀 Switched to {'🌙 Low-Light' if mode == 'low_light' else '☀️ Normal'} model")
 
                 # ---- PROCESS FRAME ----
 
-                output_frame, face_states = detector.process_frame(frame)
+                output_frame, face_states = detector.process_frame(
+                    frame, brightness=mean_brightness
+                )
 
                 # Display
                 rgb = cv2.cvtColor(output_frame, cv2.COLOR_BGR2RGB)
-                frame_placeholder.image(rgb, channels="RGB", width="stretch")
+                frame_placeholder.image(rgb, channels="RGB", use_container_width=True)
 
                 # 🔥 MODE DISPLAY
                 mode_icon  = "🌙" if current_mode == "low_light" else "☀️"
@@ -324,7 +310,8 @@ if page == "🎥 Live Detection":
                 status_box.markdown("\n\n".join(badges) if badges else "_No faces detected_")
 
             cap.release()
-            detector.release()
+            if detector is not None:
+                detector.release()
             info_placeholder.success("Camera stopped.")
 
 
